@@ -112,7 +112,7 @@ endif(USE_OPEN_MP)
 #FILE(GLOB h_SRC "include/${PROJECT_NAME}/*.h")
 #FILE(GLOB cpp_SRC "src/*.cpp")
 
-add_library(${PROJECT_NAME}_planar include/homotopy_based_planning/planar_rectangles_circles_environment.h src/planar_rectangles_circles_environment.cpp)
+add_library(${PROJECT_NAME}_planar include/homotopy_based_planning/planar_rectangles_circles_environment.h src/planar_rectangles_circles_environment.cpp include/homotopy_based_planning/h_signature_astar.hpp)
 add_dependencies(${PROJECT_NAME}_planar ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_planar ${catkin_LIBRARIES})
 
@@ -128,9 +128,15 @@ add_executable(planar_rectangles_circles_node_fig14 nodes/planar_rectangles_circ
 add_dependencies(planar_rectangles_circles_node_fig14 ${catkin_EXPORTED_TARGETS})
 target_link_libraries(planar_rectangles_circles_node_fig14 ${PROJECT_NAME}_planar)
 
-add_library(${PROJECT_NAME}_3d include/homotopy_based_planning/three_dimensional_environment.h src/three_dimensional_environment.cpp)
+
+
+add_library(${PROJECT_NAME}_3d include/homotopy_based_planning/three_dimensional_environment.h src/three_dimensional_environment.cpp include/homotopy_based_planning/h_signature_astar.hpp)
 add_dependencies(${PROJECT_NAME}_3d ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_3d ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_3d ${catkin_LIBRARIES} ${GSL_LIBRARIES})
+
+add_executable(three_dimensional_node_fig17a nodes/three_dimensional_node_fig17a.cpp)
+add_dependencies(three_dimensional_node_fig17a ${catkin_EXPORTED_TARGETS})
+target_link_libraries(three_dimensional_node_fig17a ${PROJECT_NAME}_3d)
 
 
 #############

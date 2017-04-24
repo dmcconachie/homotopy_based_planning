@@ -53,7 +53,7 @@ namespace hbp
             {
                 public:
                     AugmentedConfigType()
-                        : basic_config_(NAN, NAN)
+                        : basic_config_(NAN * BasicConfigType())
                     {}
 
                     AugmentedConfigType(const BasicConfigType& basic_config,
@@ -261,7 +261,10 @@ namespace hbp
                         geometry_msgs::Point p;
                         p.x = current_basic_node[0];
                         p.y = current_basic_node[1];
-                        p.z = 0;
+                        if (current_basic_node.size() >= 3)
+                        {
+                            p.z = current_basic_node[2];
+                        }
                         ++marker.id;
                         marker.points.push_back(p);
 
