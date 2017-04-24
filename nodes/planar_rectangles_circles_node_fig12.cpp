@@ -13,8 +13,8 @@ int main(int argc, char* argv[])
     ros::NodeHandle nh;
     ros::NodeHandle ph("~");
 
-    const size_t num_paths = ROSHelpers::GetParam(ph, "num_paths", 1);
-    const bool visualize = ROSHelpers::GetParam(ph, "visualize", true);
+    const size_t num_paths = ROSHelpers::GetParam(ph, "num_paths", 20);
+    const bool visualize = ROSHelpers::GetParam(ph, "visualize", false);
     std::cout << std::flush;
 
 

@@ -13,6 +13,8 @@ namespace hbp
 
 
             static ThreeDimensionalEnvironment CreateBhattacharyaExampleFig17a();
+            static ThreeDimensionalEnvironment CreateBhattacharyaExampleFig17b();
+            static ThreeDimensionalEnvironment CreateBhattacharyaExampleFig18();
 
             static void assertIsGridAligned(const ConfigType& p);
 
@@ -31,7 +33,6 @@ namespace hbp
             double distance(const ConfigType& a, const ConfigType& b) const;
 
             double heuristicDistance(const ConfigType& node) const;
-
 
 
             HSignatureType getLineSegmentHSignature(const ConfigType& a, const ConfigType& b) const;
@@ -72,5 +73,60 @@ namespace hbp
 
             std::vector<HSignatureType> blacklisted_h_signatures_;
             std::vector<HSignatureType> whitelisted_h_signatures_;
+
+            struct HValueToNeighbours
+            {
+                public:
+                    HValueToNeighbours()
+                        : center_(NAN, NAN, NAN)
+                        , is_initialized_(false)
+                    {}
+
+                    HValueToNeighbours(const Eigen::Vector3d& loc)
+                        : center_(loc)
+//                        , values_(3, std::vector<std::vector<ThreeDimensionalEnvironment::HSignatureType>>(3, std::vector<ThreeDimensionalEnvironment::HSignatureType>(3)))
+                        , is_initialized_(true)
+                    {}
+
+                    HValueToNeighbours(const HValueToNeighbours& other)
+                        : center_(other.center_)
+                        , values_(other.values_)
+                        , is_initialized_(other.is_initialized_)
+                    {}
+
+                    void assertIsNeighbour(const Eigen::Vector3d& delta) const
+                    {
+                        assert(std::abs(delta.x()) <= 1.0);
+                        assert(std::abs(delta.y()) <= 1.0);
+                        assert(std::abs(delta.z()) <= 1.0);
+                    }
+
+                    ThreeDimensionalEnvironment::HSignatureType getHValue(const Eigen::Vector3d& loc) const
+                    {
+                        assert(is_initialized_);
+                        const Eigen::Vector3d delta = loc - center_;
+                        assertIsNeighbour(delta);
+                        assert(values_[(size_t)delta.x() + 1][(size_t)delta.y() + 1][(size_t)delta.z() + 1].size() == 4);
+                        return values_[(size_t)delta.x() + 1][(size_t)delta.y() + 1][(size_t)delta.z() + 1];
+                    }
+
+                    void setHValue(const Eigen::Vector3d& loc, const ThreeDimensionalEnvironment::HSignatureType val)
+                    {
+                        assert(is_initialized_);
+                        const Eigen::Vector3d delta = loc - center_;
+                        assertIsNeighbour(delta);
+                        assert(delta.squaredNorm() >= 1.0);
+                        values_[(size_t)delta.x() + 1][(size_t)delta.y() + 1][(size_t)delta.z() + 1] = val;
+                    }
+
+                    Eigen::Vector3d center_;
+                    ThreeDimensionalEnvironment::HSignatureType values_[3][3][3];
+//                    std::vector<std::vector<std::vector<ThreeDimensionalEnvironment::HSignatureType>>> values_;
+                    bool is_initialized_;
+            };
+
+            bool use_cached_h_vals_;
+            VoxelGrid::VoxelGrid<HValueToNeighbours> cached_h_values_;
+            HValueToNeighbours generateNeighbourHValues(const Eigen::Vector3d& center) const;
     };
 }

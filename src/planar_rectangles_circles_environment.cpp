@@ -3,6 +3,8 @@
 #include <arc_utilities/eigen_helpers_conversions.hpp>
 #include <arc_utilities/pretty_print.hpp>
 
+#include <omp.h>
+
 using namespace hbp;
 
 static void addCircleToCollisionMapGrid(sdf_tools::CollisionMapGrid& map, const Circle& circle)
@@ -175,6 +177,8 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig12()
     env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.start_, "start", 1, env.marker_scale_, env.start_end_line_length_));
     env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.goal_, "goal", 1, env.marker_scale_, env.start_end_line_length_));
 
+    omp_set_num_threads(5);
+
     return env;
 }
 
@@ -243,6 +247,8 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig13()
 
     env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.start_, "start", 1, env.marker_scale_, env.start_end_line_length_));
     env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.goal_, "goal", 1, env.marker_scale_, env.start_end_line_length_));
+
+    omp_set_num_threads(5);
 
     return env;
 }
@@ -398,6 +404,8 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig14()
         env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.goal_2nd_robot_, "goal", 2, env.marker_scale_, env.start_end_line_length_));
     }
 
+    omp_set_num_threads(2);
+
     return env;
 }
 
@@ -515,12 +523,14 @@ Eigen::VectorXcd PlanarRectangesCircles::getLineSegmentHSignature(const Eigen::V
     // Section 3.3 - approximate integration along line segement
     Eigen::VectorXcd h_vals(circles_.size() + rectangles_.size());
 
+    #pragma omp parallel for
     for (size_t circle_ind = 0; circle_ind < circles_.size(); ++circle_ind)
     {
         const std::complex<double> z_pole(circles_[circle_ind].center_.x(), circles_[circle_ind].center_.y());
         h_vals(circle_ind) = internalNaturalLogHelper(z_pole, z_a, z_b);
     }
 
+    #pragma omp parallel for
     for (size_t rectangle_ind = 0; rectangle_ind < rectangles_.size(); ++rectangle_ind)
     {
         const std::complex<double> z_pole(rectangles_[rectangle_ind].center_.x(), rectangles_[rectangle_ind].center_.y());
@@ -618,7 +628,7 @@ std::vector<Eigen::Vector2d> PlanarRectangesCircles::waypointsToPath(const std::
 
 Eigen::VectorXcd PlanarRectangesCircles::getPathHSignature(const std::vector<Eigen::Vector2d>& path) const
 {
-    assert(false && "This function is broken somehow");
+//    assert(false && "This function is broken somehow");
     Eigen::VectorXcd h_signature = getZeroHSignature();
 
     for (size_t start_ind = 0; start_ind < path.size() - 1; ++start_ind)

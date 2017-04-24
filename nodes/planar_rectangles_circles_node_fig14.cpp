@@ -37,11 +37,11 @@ int main(int argc, char* argv[])
     map.clearBlacklist();
 
     const auto second_robot_results = HSignatureAStar<PlanarRectangesCircles>::Plan(map, map.getStart2ndRobot(), map.getGoal2ndRobot(), 1, marker_pub, false);
-    marker_pub.publish(map.getPathMarker(second_robot_results.paths_[0], "paths", 2));
+    marker_pub.publish(map.getPathMarker(second_robot_results.paths_[0], "paths", 1));
     map.clearBlacklist();
 
     const auto second_robot_results_connect_to_first = HSignatureAStar<PlanarRectangesCircles>::Plan(map, map.getStart2ndRobot(), map.getStart(), 1, marker_pub, false);
-    marker_pub.publish(map.getPathMarker(second_robot_results_connect_to_first.paths_[0], "paths", 3));
+    marker_pub.publish(map.getPathMarker(second_robot_results_connect_to_first.paths_[0], "paths", 6));
     map.clearBlacklist();
 
     const auto second_robot_results_connect_to_goal = HSignatureAStar<PlanarRectangesCircles>::Plan(map, map.getGoal(), map.getGoal2ndRobot(), 1, marker_pub, false);

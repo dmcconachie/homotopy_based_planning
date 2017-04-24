@@ -84,6 +84,9 @@ namespace hbp
 
                     bool operator==(const AugmentedConfigType& other) const
                     {
+//                        std::cout << h_signature_ << " " << h_signature_rounded_ << " " << GraphType::RoundHSignature(h_signature_) << std::endl;
+//                        std::cout << other.h_signature_ << " " << other.h_signature_rounded_ << " " << GraphType::RoundHSignature(other.h_signature_) << std::endl;
+//                        std::cout << std::flush;
                         assert(GraphType::RoundHSignature(h_signature_) == h_signature_rounded_);
                         assert(GraphType::RoundHSignature(other.h_signature_) == other.h_signature_rounded_);
                         return (basic_config_ == other.basic_config_ && h_signature_rounded_ == other.h_signature_rounded_);

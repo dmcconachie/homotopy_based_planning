@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", queue_size, latch);
 
     std::cout << "Creating map\n";
-    auto map = ThreeDimensionalEnvironment::CreateBhattacharyaExampleFig17a();
+    auto map = ThreeDimensionalEnvironment::CreateBhattacharyaExampleFig17b();
     marker_array_pub.publish(map.getCollisionMapMarkers());
     ros::spinOnce();
     sleep(1);

@@ -15,16 +15,16 @@ int main(int argc, char* argv[])
 
     Eigen::IOFormat one_line(Eigen::FullPrecision, 0, " ", " ");
 
-    const size_t num_paths = ROSHelpers::GetParam(ph, "num_paths", 4);
-    const bool visualize = ROSHelpers::GetParam(ph, "visualize", true);
+    const size_t num_paths = ROSHelpers::GetParam(ph, "num_paths", 10);
+    const bool visualize = ROSHelpers::GetParam(ph, "visualize", false);
 
     const bool latch = false;
-    const uint32_t queue_size = 1000;
+    const uint32_t queue_size = 1;
     ros::Publisher marker_array_pub = nh.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", queue_size, latch);
     ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", queue_size, latch);
 
     std::cout << "Creating map\n";
-    auto map = ThreeDimensionalEnvironment::CreateBhattacharyaExampleFig17a();
+    auto map = ThreeDimensionalEnvironment::CreateBhattacharyaExampleFig18();
     marker_array_pub.publish(map.getCollisionMapMarkers());
     ros::spinOnce();
     sleep(1);

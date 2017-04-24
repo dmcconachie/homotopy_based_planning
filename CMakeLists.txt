@@ -98,7 +98,7 @@ include_directories(include
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -O3 -g -Wall -Wextra -Wpedantic -Wconversion")
 
 unset(USE_OPEN_MP CACHE)
-option(USE_OPEN_MP "Set to ON if we want to use OpenMP" OFF)
+option(USE_OPEN_MP "Set to ON if we want to use OpenMP" ON)
 if(USE_OPEN_MP)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -DUSE_OPEN_MP")
     message(STATUS "Enabling OpenMP for Homotopy Based Planning library")
@@ -138,6 +138,17 @@ add_executable(three_dimensional_node_fig17a nodes/three_dimensional_node_fig17a
 add_dependencies(three_dimensional_node_fig17a ${catkin_EXPORTED_TARGETS})
 target_link_libraries(three_dimensional_node_fig17a ${PROJECT_NAME}_3d)
 
+add_executable(three_dimensional_node_fig17b nodes/three_dimensional_node_fig17b.cpp)
+add_dependencies(three_dimensional_node_fig17b ${catkin_EXPORTED_TARGETS})
+target_link_libraries(three_dimensional_node_fig17b ${PROJECT_NAME}_3d)
+
+add_executable(three_dimensional_node_fig18a nodes/three_dimensional_node_fig18a.cpp)
+add_dependencies(three_dimensional_node_fig18a ${catkin_EXPORTED_TARGETS})
+target_link_libraries(three_dimensional_node_fig18a ${PROJECT_NAME}_3d)
+
+add_executable(three_dimensional_node_fig18b nodes/three_dimensional_node_fig18b.cpp)
+add_dependencies(three_dimensional_node_fig18b ${catkin_EXPORTED_TARGETS})
+target_link_libraries(three_dimensional_node_fig18b ${PROJECT_NAME}_3d)
 
 #############
 ## Install ##
