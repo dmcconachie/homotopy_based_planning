@@ -75,7 +75,8 @@ find_package(GSL REQUIRED)
 
 catkin_package(
     INCLUDE_DIRS    include
-    LIBRARIES       ${PROJECT_NAME}
+    LIBRARIES       ${PROJECT_NAME}_planar
+                    ${PROJECT_NAME}_3d
     CATKIN_DEPENDS  ${CATKIN_PACKAGES}
     DEPENDS         Eigen3
                     GSL
@@ -107,21 +108,30 @@ else(USE_OPEN_MP)
 endif(USE_OPEN_MP)
 
 ## Library file for the whole project
-FILE(GLOB hpp_SRC "include/${PROJECT_NAME}/*.hpp")
-FILE(GLOB h_SRC "include/${PROJECT_NAME}/*.h")
-FILE(GLOB cpp_SRC "src/*.cpp")
+#FILE(GLOB hpp_SRC "include/${PROJECT_NAME}/*.hpp")
+#FILE(GLOB h_SRC "include/${PROJECT_NAME}/*.h")
+#FILE(GLOB cpp_SRC "src/*.cpp")
 
-add_library(${PROJECT_NAME} ${hpp_SRC} ${h_SRC} ${cpp_SRC})
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${GSL_LIBRARIES})
+add_library(${PROJECT_NAME}_planar include/homotopy_based_planning/planar_rectangles_circles_environment.h src/planar_rectangles_circles_environment.cpp)
+add_dependencies(${PROJECT_NAME}_planar ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_planar ${catkin_LIBRARIES})
 
 add_executable(planar_rectangles_circles_node_fig12 nodes/planar_rectangles_circles_node_fig12.cpp)
 add_dependencies(planar_rectangles_circles_node_fig12 ${catkin_EXPORTED_TARGETS})
-target_link_libraries(planar_rectangles_circles_node_fig12 ${PROJECT_NAME})
+target_link_libraries(planar_rectangles_circles_node_fig12 ${PROJECT_NAME}_planar)
 
 add_executable(planar_rectangles_circles_node_fig13 nodes/planar_rectangles_circles_node_fig13.cpp)
 add_dependencies(planar_rectangles_circles_node_fig13 ${catkin_EXPORTED_TARGETS})
-target_link_libraries(planar_rectangles_circles_node_fig13 ${PROJECT_NAME})
+target_link_libraries(planar_rectangles_circles_node_fig13 ${PROJECT_NAME}_planar)
+
+add_executable(planar_rectangles_circles_node_fig14 nodes/planar_rectangles_circles_node_fig14.cpp)
+add_dependencies(planar_rectangles_circles_node_fig14 ${catkin_EXPORTED_TARGETS})
+target_link_libraries(planar_rectangles_circles_node_fig14 ${PROJECT_NAME}_planar)
+
+add_library(${PROJECT_NAME}_3d include/homotopy_based_planning/three_dimensional_environment.h src/three_dimensional_environment.cpp)
+add_dependencies(${PROJECT_NAME}_3d ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_3d ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##

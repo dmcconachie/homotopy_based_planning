@@ -113,7 +113,8 @@ namespace hbp
 
                     friend std::ostream& operator<<(std::ostream& os, const AugmentedConfigType& config)
                     {
-                        os << PrettyPrint::PrettyPrint(config.basic_config_) << " " << PrettyPrint::PrettyPrint(config.h_signature_);
+                        Eigen::IOFormat one_line(Eigen::FullPrecision, 0, " ", " ");
+                        os << PrettyPrint::PrettyPrint(config.basic_config_) << "\nHSignature:\n" << PrettyPrint::PrettyPrint(config.h_signature_.format(one_line));
                         return os;
                     }
             };
@@ -216,7 +217,7 @@ namespace hbp
                     const GraphType& graph_;
             };
 
-            static PlanResults Plan(const GraphType& graph, const size_t num_paths, ros::Publisher& vis_pub, const bool visualization_enabled)
+            static PlanResults Plan(GraphType& graph, const BasicConfigType& start, const BasicConfigType& goal, const size_t num_paths, ros::Publisher& vis_pub, const bool visualization_enabled)
             {
                 stopwatch(RESET);
 
@@ -240,7 +241,7 @@ namespace hbp
                 std::unordered_map<AugmentedConfigType, double, AugmentedConfigHasher> cost_to_come;
                 std::unordered_map<AugmentedConfigType, AugmentedConfigType, AugmentedConfigHasher> backpointers;
 
-                const AugmentedConfigType augmented_start(graph.getStart(), graph.getZeroHSignature(), graph.getZeroHSignature());
+                const AugmentedConfigType augmented_start(start, graph.getZeroHSignature(), graph.getZeroHSignature());
                 frontier.push(AugmentedConfigAndDistType(augmented_start, graph.heuristicDistance(graph.getStart())));
                 cost_to_come[augmented_start] = 0.0;
 
@@ -273,7 +274,7 @@ namespace hbp
                         }
                     }
 
-                    if (graph.goalReached(current_basic_node))
+                    if (current_basic_node.isApprox(goal, 1e-10) && !graph.hSignatureInBlacklist(current_hsignature) && graph.hSignatureInWhitelist(current_hsignature))
                     {
                         if (visualization_enabled)
                         {
@@ -284,23 +285,14 @@ namespace hbp
                             vis_pub.publish(marker);
                         }
 
-                        bool new_homotopy_class = true;
-                        for (size_t blacklist_ind = 0; blacklist_ind < results.hsignatures_.size(); ++blacklist_ind)
-                        {
-                            if ((current_hsignature - results.hsignatures_[blacklist_ind]).norm() < 1e-10)
-                            {
-                                new_homotopy_class = false;
-                            }
-                        }
-                        if (new_homotopy_class)
-                        {
-                            results.paths_.push_back(ExtractPathBasic(backpointers, current_augmented_node));
-                            results.hsignatures_.push_back(current_hsignature);
-                            results.num_states_explored_.push_back(explored.size());
-                            results.time_.push_back(stopwatch(READ));
-                            std::cout << results << std::endl;
-                            vis_pub.publish(graph.getPathMarker(results.paths_.back(), "paths", (int32_t)results.paths_.size()));
-                        }
+                        graph.appendToBlacklist(current_hsignature);
+
+                        results.paths_.push_back(ExtractPathBasic(backpointers, current_augmented_node));
+                        results.hsignatures_.push_back(current_hsignature);
+                        results.num_states_explored_.push_back(explored.size());
+                        results.time_.push_back(stopwatch(READ));
+                        std::cout << results << std::endl;
+                        vis_pub.publish(graph.getPathMarker(results.paths_.back(), "paths", (int32_t)results.paths_.size()));
 
                         if (results.paths_.size() == num_paths)
                         {

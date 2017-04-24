@@ -39,10 +39,8 @@ static void addRectangleToCollisionMapGrid(sdf_tools::CollisionMapGrid& map, con
     }
 }
 
-static visualization_msgs::Marker makeWaypointMarker(const Eigen::Vector2d& waypoint, const std::string& ns, const int id, const double scale)
+static visualization_msgs::Marker makeWaypointMarker(const Eigen::Vector2d& waypoint, const std::string& ns, const int id, const double scale, const double line_length)
 {
-    const double length = 10;
-
     visualization_msgs::Marker marker;
 
     marker.header.frame_id = "mocap_world";
@@ -53,10 +51,10 @@ static visualization_msgs::Marker makeWaypointMarker(const Eigen::Vector2d& wayp
     marker.scale.x = scale;
     marker.color = arc_helpers::RGBAColorBuilder<std_msgs::ColorRGBA>::MakeFromFloatColors(1, 0, 0, 1);
 
-    marker.points.push_back(EigenHelpersConversions::EigenVector3dToGeometryPoint(Eigen::Vector3d(waypoint.x() - length, waypoint.y(), -1.0)));
-    marker.points.push_back(EigenHelpersConversions::EigenVector3dToGeometryPoint(Eigen::Vector3d(waypoint.x() + length, waypoint.y(), -1.0)));
-    marker.points.push_back(EigenHelpersConversions::EigenVector3dToGeometryPoint(Eigen::Vector3d(waypoint.x(), waypoint.y() - length, -1.0)));
-    marker.points.push_back(EigenHelpersConversions::EigenVector3dToGeometryPoint(Eigen::Vector3d(waypoint.x(), waypoint.y() + length, -1.0)));
+    marker.points.push_back(EigenHelpersConversions::EigenVector3dToGeometryPoint(Eigen::Vector3d(waypoint.x() - line_length, waypoint.y(), -1.0)));
+    marker.points.push_back(EigenHelpersConversions::EigenVector3dToGeometryPoint(Eigen::Vector3d(waypoint.x() + line_length, waypoint.y(), -1.0)));
+    marker.points.push_back(EigenHelpersConversions::EigenVector3dToGeometryPoint(Eigen::Vector3d(waypoint.x(), waypoint.y() - line_length, -1.0)));
+    marker.points.push_back(EigenHelpersConversions::EigenVector3dToGeometryPoint(Eigen::Vector3d(waypoint.x(), waypoint.y() + line_length, -1.0)));
 
     return marker;
 }
@@ -117,6 +115,7 @@ static std::complex<double> internalNaturalLogHelper(const std::complex<double>&
 // Section 6.1.1
 PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig12()
 {
+    // Setup the world itself
     PlanarRectangesCircles env;
 
     const double res = 1.0;
@@ -125,6 +124,7 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig12()
     const double z_size = 1.0;
 
     env.marker_scale_ = 3.0;
+    env.start_end_line_length_ = 10.0;
 
     auto grid_offset = Eigen::Affine3d::Identity();
     grid_offset(0, 3) = 0.5;
@@ -136,6 +136,7 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig12()
     assert(env.collision_map_grid_.GetNumYCells() == (ssize_t)y_size);
     assert(env.collision_map_grid_.GetNumZCells() == 1);
 
+    // Setup obstacles
     env.circles_.push_back(Circle(Eigen::Vector2d(750.0, 100.0), 90.0));
     env.circles_.push_back(Circle(Eigen::Vector2d(190.0, 320.0), 160.0));
     env.circles_.push_back(Circle(Eigen::Vector2d(550.0, 460.0), 200.0));
@@ -148,8 +149,6 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig12()
     env.rectangles_.push_back(Rectangle(Eigen::Vector2d(210.0, 660.0), Eigen::Vector2d(320.0, 820.0)));
     env.rectangles_.push_back(Rectangle(Eigen::Vector2d(680.0, 660.0), Eigen::Vector2d(900.0, 850.0)));
 
-//    env.rectangles_.push_back(Rectangle(Eigen::Vector2d(4.0, 2.0), Eigen::Vector2d(6.0, 8.0)));
-
     for (const auto& circle : env.circles_)
     {
         addCircleToCollisionMapGrid(env.collision_map_grid_, circle);
@@ -160,22 +159,21 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig12()
         addRectangleToCollisionMapGrid(env.collision_map_grid_, rectangle);
     }
 
+    // Setup start and goal
     env.start_ = Eigen::Vector2d(20.0, 200.0);
     env.goal_ = Eigen::Vector2d(950.0, 900.0);
-
-//    env.start_ = Eigen::Vector2d(1.0, 1.0);
-//    env.goal_ = Eigen::Vector2d(9.0, 7.0);
 
     assert(env.collision_map_grid_.Get(env.start_.x(), env.start_.y(), 0.0).first.occupancy == 0.0);
     assert(env.collision_map_grid_.Get(env.goal_.x(), env.goal_.y(), 0.0).first.occupancy == 0.0);
 
+    // Pre-generate markers for exporting
     env.collision_map_marker_array_.markers.push_back(env.collision_map_grid_.ExportForDisplay(
                 arc_helpers::RGBAColorBuilder<std_msgs::ColorRGBA>::MakeFromFloatColors(140.0f/255.0f, 153.0f/255.0f, 140.0f/255.0f, 1.0f),
                 arc_helpers::RGBAColorBuilder<std_msgs::ColorRGBA>::MakeFromFloatColors(0.0f, 1.0f, 0.0f, 0.0f),
                 arc_helpers::RGBAColorBuilder<std_msgs::ColorRGBA>::MakeFromFloatColors(0.0f, 0.0f, 1.0f, 0.1f)));
 
-    env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.start_, "start", 1, env.marker_scale_));
-    env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.goal_, "goal", 1, env.marker_scale_));
+    env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.start_, "start", 1, env.marker_scale_, env.start_end_line_length_));
+    env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.goal_, "goal", 1, env.marker_scale_, env.start_end_line_length_));
 
     return env;
 }
@@ -183,6 +181,7 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig12()
 // Section 6.1.2
 PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig13()
 {
+    // Setup the world itself
     PlanarRectangesCircles env;
 
     const double res = 1.0;
@@ -191,6 +190,7 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig13()
     const double z_size = 1.0;
 
     env.marker_scale_ = 1.0;
+    env.start_end_line_length_ = 3.0;
 
     auto grid_offset = Eigen::Affine3d::Identity();
     grid_offset(0, 3) = 0.5;
@@ -202,6 +202,7 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig13()
     assert(env.collision_map_grid_.GetNumYCells() == (ssize_t)y_size);
     assert(env.collision_map_grid_.GetNumZCells() == 1);
 
+    // Setup obstacles
     env.rectangles_.push_back(Rectangle(Eigen::Vector2d( 4.0,  5.0), Eigen::Vector2d(45.0, 10.0)));
     env.rectangles_.push_back(Rectangle(Eigen::Vector2d( 7.0, 15.0), Eigen::Vector2d(22.0, 20.0)));
     env.rectangles_.push_back(Rectangle(Eigen::Vector2d(25.0, 17.0), Eigen::Vector2d(47.0, 25.0)));
@@ -218,25 +219,188 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig13()
         addRectangleToCollisionMapGrid(env.collision_map_grid_, rectangle);
     }
 
+    // Setup the start and goal
     env.start_ = Eigen::Vector2d(1.0, 1.0);
     env.goal_ = Eigen::Vector2d(49.0, 49.0);
-
-//    env.start_ = Eigen::Vector2d(1.0, 1.0);
-//    env.goal_ = Eigen::Vector2d(9.0, 7.0);
 
     assert(env.collision_map_grid_.Get(env.start_.x(), env.start_.y(), 0.0).first.occupancy == 0.0);
     assert(env.collision_map_grid_.Get(env.goal_.x(), env.goal_.y(), 0.0).first.occupancy == 0.0);
 
+    // Generate the allowable H-signature
+    std::vector<Eigen::Vector2d> path;
+    path.push_back(env.start_);
+    path.push_back(Eigen::Vector2d(2.0, 12.0));
+    path.push_back(Eigen::Vector2d(49.0, 12.0));
+    path.push_back(env.goal_);
+    env.collision_map_marker_array_.markers.push_back(env.getPathMarker(path, "target_homology_class", 2));
+    env.appendToWhitelist(env.getPathHSignature(path));
+
+    // Pre-generate markers for exporting
     env.collision_map_marker_array_.markers.push_back(env.collision_map_grid_.ExportForDisplay(
                 arc_helpers::RGBAColorBuilder<std_msgs::ColorRGBA>::MakeFromFloatColors(140.0f/255.0f, 153.0f/255.0f, 140.0f/255.0f, 1.0f),
                 arc_helpers::RGBAColorBuilder<std_msgs::ColorRGBA>::MakeFromFloatColors(0.0f, 1.0f, 0.0f, 0.0f),
                 arc_helpers::RGBAColorBuilder<std_msgs::ColorRGBA>::MakeFromFloatColors(0.0f, 0.0f, 1.0f, 0.1f)));
 
-    env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.start_, "start", 1, env.marker_scale_));
-    env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.goal_, "goal", 1, env.marker_scale_));
+    env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.start_, "start", 1, env.marker_scale_, env.start_end_line_length_));
+    env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.goal_, "goal", 1, env.marker_scale_, env.start_end_line_length_));
 
     return env;
 }
+
+// Section 6.1.3
+PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig14()
+{
+    // Setup the world itself
+    PlanarRectangesCircles env;
+    {
+        const double res = 1.0;
+        const double x_size = 100.0;
+        const double y_size = 100.0;
+        const double z_size = 1.0;
+
+        env.marker_scale_ = 1.0;
+        env.start_end_line_length_ = 3.0;
+
+        auto grid_offset = Eigen::Affine3d::Identity();
+        grid_offset(0, 3) = 0.5;
+        grid_offset(1, 3) = 0.5;
+
+        env.collision_map_grid_ = sdf_tools::CollisionMapGrid(grid_offset, "mocap_world", res, x_size, y_size, z_size, sdf_tools::COLLISION_CELL(0.0), sdf_tools::COLLISION_CELL(1.0));
+
+        assert(env.collision_map_grid_.GetNumXCells() == (ssize_t)x_size);
+        assert(env.collision_map_grid_.GetNumYCells() == (ssize_t)y_size);
+        assert(env.collision_map_grid_.GetNumZCells() == 1);
+    }
+
+    // Setup obstacles
+    {
+        // 0 thru 6
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(18.0,  5.0), Eigen::Vector2d(62.0, 5.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(67.0,  5.0), Eigen::Vector2d(75.0, 5.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(62.0, 12.0), Eigen::Vector2d(67.0, 12.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(62.0,  5.0), Eigen::Vector2d(62.0, 12.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(67.0,  5.0), Eigen::Vector2d(67.0, 12.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(18.0,  5.0), Eigen::Vector2d(18.0, 27.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(75.0,  5.0), Eigen::Vector2d(75.0, 25.0)));
+
+        // 7 thru 10
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d( 3.0, 18.0), Eigen::Vector2d( 3.0, 29.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(15.0, 18.0), Eigen::Vector2d(15.0, 25.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d( 3.0, 18.0), Eigen::Vector2d(15.0, 18.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d( 3.0, 29.0), Eigen::Vector2d(25.0, 29.0)));
+
+        // 11 thru 13
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(15.0, 24.0), Eigen::Vector2d(17.0, 25.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(20.0, 24.0), Eigen::Vector2d(64.0, 25.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(68.0, 24.0), Eigen::Vector2d(85.0, 25.0)));
+
+        // 14 thru 16
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(85.0, 25.0), Eigen::Vector2d(85.0, 30.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(75.0, 30.0), Eigen::Vector2d(85.0, 30.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(57.0, 29.0), Eigen::Vector2d(76.0, 29.0)));
+
+        // 17 thru 25
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(25.0, 29.0), Eigen::Vector2d(26.0, 47.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(25.0, 52.0), Eigen::Vector2d(26.0, 76.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(25.0, 81.0), Eigen::Vector2d(26.0, 99.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(15.0, 33.0), Eigen::Vector2d(26.0, 33.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(15.0, 49.0), Eigen::Vector2d(26.0, 50.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(15.0, 64.0), Eigen::Vector2d(26.0, 64.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(15.0, 78.0), Eigen::Vector2d(26.0, 79.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(15.0, 90.0), Eigen::Vector2d(26.0, 90.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(15.0, 33.0), Eigen::Vector2d(15.0, 90.0)));
+
+        // 26 thru 34
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(57.0, 29.0), Eigen::Vector2d(57.0, 47.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(57.0, 52.0), Eigen::Vector2d(57.0, 76.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(57.0, 81.0), Eigen::Vector2d(57.0, 94.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(57.0, 33.0), Eigen::Vector2d(67.0, 33.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(57.0, 49.0), Eigen::Vector2d(67.0, 50.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(57.0, 64.0), Eigen::Vector2d(67.0, 64.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(57.0, 78.0), Eigen::Vector2d(67.0, 79.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(57.0, 90.0), Eigen::Vector2d(67.0, 90.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(67.0, 33.0), Eigen::Vector2d(67.0, 90.0)));
+
+        // 35 thru 39
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(26.0, 99.0), Eigen::Vector2d(45.0, 99.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(45.0, 98.0), Eigen::Vector2d(58.0, 98.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(58.0, 99.0), Eigen::Vector2d(67.0, 99.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(67.0, 94.0), Eigen::Vector2d(67.0, 99.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(57.0, 94.0), Eigen::Vector2d(67.0, 94.0)));
+
+        // 40 thru 45
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(31.0, 29.0), Eigen::Vector2d(52.0, 29.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(31.0, 33.0), Eigen::Vector2d(52.0, 33.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(31.0, 55.0), Eigen::Vector2d(52.0, 55.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(31.0, 70.0), Eigen::Vector2d(52.0, 70.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(31.0, 90.0), Eigen::Vector2d(52.0, 90.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(31.0, 93.0), Eigen::Vector2d(52.0, 93.0)));
+
+        // 46 thru 49
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(31.0, 29.0), Eigen::Vector2d(32.0, 46.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(31.0, 48.0), Eigen::Vector2d(32.0, 55.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(31.0, 70.0), Eigen::Vector2d(32.0, 82.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(31.0, 84.0), Eigen::Vector2d(32.0, 93.0)));
+
+        // 50 thru 53
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(52.0, 29.0), Eigen::Vector2d(52.0, 46.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(52.0, 48.0), Eigen::Vector2d(52.0, 55.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(52.0, 70.0), Eigen::Vector2d(52.0, 82.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(52.0, 84.0), Eigen::Vector2d(52.0, 93.0)));
+
+        for (const auto& circle : env.circles_)
+        {
+            addCircleToCollisionMapGrid(env.collision_map_grid_, circle);
+        }
+        for (const auto& rectangle : env.rectangles_)
+        {
+            addRectangleToCollisionMapGrid(env.collision_map_grid_, rectangle);
+        }
+
+        // Clear all values and then add the last few so that we only have H-signatures for the single central walls
+        env.rectangles_.clear();
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(40.0, 33.0), Eigen::Vector2d(41.0, 55.0)));
+        env.rectangles_.push_back(Rectangle(Eigen::Vector2d(40.0, 70.0), Eigen::Vector2d(41.0, 90.0)));
+
+        for (const auto& rectangle : env.rectangles_)
+        {
+            addRectangleToCollisionMapGrid(env.collision_map_grid_, rectangle);
+        }
+
+    }
+
+    // Setup the start and goal
+    {
+        env.start_ = Eigen::Vector2d(37.0, 15.0);
+        env.goal_ = Eigen::Vector2d(37.0, 98.0);
+
+        env.start_2nd_robot_ = Eigen::Vector2d(50.0, 18.0);
+        env.goal_2nd_robot_ = Eigen::Vector2d(64.0, 95.0);
+
+        assert(env.collision_map_grid_.Get(env.start_.x(), env.start_.y(), 0.0).first.occupancy == 0.0);
+        assert(env.collision_map_grid_.Get(env.goal_.x(), env.goal_.y(), 0.0).first.occupancy == 0.0);
+
+        assert(env.collision_map_grid_.Get(env.start_2nd_robot_.x(), env.start_2nd_robot_.y(), 0.0).first.occupancy == 0.0);
+        assert(env.collision_map_grid_.Get(env.goal_2nd_robot_.x(), env.goal_2nd_robot_.y(), 0.0).first.occupancy == 0.0);
+    }
+
+    // Pre-generate markers for exporting
+    {
+        env.collision_map_marker_array_.markers.push_back(env.collision_map_grid_.ExportForDisplay(
+                    arc_helpers::RGBAColorBuilder<std_msgs::ColorRGBA>::MakeFromFloatColors(140.0f/255.0f, 153.0f/255.0f, 140.0f/255.0f, 1.0f),
+                    arc_helpers::RGBAColorBuilder<std_msgs::ColorRGBA>::MakeFromFloatColors(0.0f, 1.0f, 0.0f, 0.0f),
+                    arc_helpers::RGBAColorBuilder<std_msgs::ColorRGBA>::MakeFromFloatColors(0.0f, 0.0f, 1.0f, 0.1f)));
+
+        env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.start_, "start", 1, env.marker_scale_, env.start_end_line_length_));
+        env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.goal_, "goal", 1, env.marker_scale_, env.start_end_line_length_));
+
+        env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.start_2nd_robot_, "start", 2, env.marker_scale_, env.start_end_line_length_));
+        env.collision_map_marker_array_.markers.push_back(makeWaypointMarker(env.goal_2nd_robot_, "goal", 2, env.marker_scale_, env.start_end_line_length_));
+    }
+
+    return env;
+}
+
 
 
 
@@ -282,6 +446,16 @@ const Eigen::Vector2d& PlanarRectangesCircles::getGoal() const
     return goal_;
 }
 
+const Eigen::Vector2d& PlanarRectangesCircles::getStart2ndRobot() const
+{
+    return start_2nd_robot_;
+}
+
+const Eigen::Vector2d& PlanarRectangesCircles::getGoal2ndRobot() const
+{
+    return goal_2nd_robot_;
+}
+
 EigenHelpers::VectorVector2d PlanarRectangesCircles::getNeighbours(const Eigen::Vector2d& node) const
 {
     assertIsGridAligned(node);
@@ -308,11 +482,6 @@ EigenHelpers::VectorVector2d PlanarRectangesCircles::getNeighbours(const Eigen::
     return neighbours;
 }
 
-bool PlanarRectangesCircles::goalReached(const Eigen::Vector2d& test_node) const
-{
-    return (test_node - goal_).norm() < 1e-5;
-}
-
 double PlanarRectangesCircles::distance(const Eigen::Vector2d& a, const Eigen::Vector2d& b) const
 {
     return (a - b).norm();
@@ -337,8 +506,8 @@ Eigen::VectorXcd PlanarRectangesCircles::getLineSegmentHSignature(const Eigen::V
 
     assertIsGridAligned(a);
     assertIsGridAligned(b);
-    assert(b.x() - a.x() == 0 || std::abs(b.x() - a.x()) == collision_map_grid_.GetResolution());
-    assert(b.y() - a.y() == 0 || std::abs(b.y() - a.y()) == collision_map_grid_.GetResolution());
+//    assert(b.x() - a.x() == 0 || std::abs(b.x() - a.x()) == collision_map_grid_.GetResolution());
+//    assert(b.y() - a.y() == 0 || std::abs(b.y() - a.y()) == collision_map_grid_.GetResolution());
 
     const std::complex<double> z_a(a(0), a(1));
     const std::complex<double> z_b(b(0), b(1));
@@ -381,6 +550,80 @@ Eigen::VectorXcd PlanarRectangesCircles::RoundHSignature(Eigen::VectorXcd h_sign
         imag /= std::pow(10, 10);
 
         h_signature(idx) = std::complex<double>(real, imag);
+    }
+
+    return h_signature;
+}
+
+bool PlanarRectangesCircles::hSignatureInBlacklist(const Eigen::VectorXcd& h_signature) const
+{
+    for (const auto h_sig : blacklisted_h_signatures_)
+    {
+        if (h_sig.isApprox(h_signature, 1e-10))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool PlanarRectangesCircles::hSignatureInWhitelist(const Eigen::VectorXcd& h_signature) const
+{
+    if (whitelisted_h_signatures_.size() == 0)
+    {
+        return true;
+    }
+
+    for (const auto h_sig : whitelisted_h_signatures_)
+    {
+        if (h_sig.isApprox(h_signature, 1e-10))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void PlanarRectangesCircles::appendToBlacklist(const Eigen::VectorXcd& h_signature)
+{
+    blacklisted_h_signatures_.push_back(h_signature);
+}
+
+void PlanarRectangesCircles::appendToWhitelist(const Eigen::VectorXcd& h_signature)
+{
+    whitelisted_h_signatures_.push_back(h_signature);
+}
+
+void PlanarRectangesCircles::clearBlacklist()
+{
+    blacklisted_h_signatures_.clear();
+}
+
+void PlanarRectangesCircles::clearWhitelist()
+{
+    whitelisted_h_signatures_.clear();
+}
+
+
+std::vector<Eigen::Vector2d> PlanarRectangesCircles::waypointsToPath(const std::vector<Eigen::Vector2d>& waypoints) const
+{
+    std::vector<Eigen::Vector2d> path;
+
+    assert(false && "waypointsToPath not implemented");
+
+    return path;
+}
+
+Eigen::VectorXcd PlanarRectangesCircles::getPathHSignature(const std::vector<Eigen::Vector2d>& path) const
+{
+    assert(false && "This function is broken somehow");
+    Eigen::VectorXcd h_signature = getZeroHSignature();
+
+    for (size_t start_ind = 0; start_ind < path.size() - 1; ++start_ind)
+    {
+        h_signature += getLineSegmentHSignature(path[start_ind], path[start_ind + 1]);
     }
 
     return h_signature;

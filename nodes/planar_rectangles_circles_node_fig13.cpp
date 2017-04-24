@@ -37,13 +37,13 @@ int main(int argc, char* argv[])
     }
 
     std::cout << "Creating map\n";
-    const auto map = PlanarRectangesCircles::CreateBhattacharyaExampleFig13();
+    auto map = PlanarRectangesCircles::CreateBhattacharyaExampleFig13();
     marker_array_pub.publish(map.getCollisionMapMarkers());
     ros::spinOnce();
     sleep(1);
 
-    std::cout << "Testing planner\n";
-    const auto results = HSignatureAStar<PlanarRectangesCircles>::Plan(map, num_paths, marker_pub, visualize);
+    std::cout << "Running planner\n";
+    const auto results = HSignatureAStar<PlanarRectangesCircles>::Plan(map, map.getStart(), map.getGoal(), 1, marker_pub, true);
     std::cout << std::endl << "Finished planning:\n" << results;
     for (size_t path_ind = 0; path_ind < results.paths_.size(); path_ind++)
     {
