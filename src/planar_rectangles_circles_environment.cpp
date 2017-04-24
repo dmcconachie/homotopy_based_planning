@@ -265,7 +265,7 @@ visualization_msgs::Marker PlanarRectangesCircles::getPathMarker(const std::vect
 
     for (size_t ind = 0; ind < path.size(); ind++)
     {
-        marker.points.push_back(EigenHelpersConversions::EigenVector3dToGeometryPoint(Eigen::Vector3d(path[ind].x(), path[ind].y(), 1.0)));
+        marker.points.push_back(EigenHelpersConversions::EigenVector3dToGeometryPoint(Eigen::Vector3d(path[ind].x(), path[ind].y(), (double)id)));
     }
 
     return marker;
