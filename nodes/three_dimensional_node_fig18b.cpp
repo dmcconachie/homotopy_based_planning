@@ -11,12 +11,12 @@ int main(int argc, char* argv[])
     // Read in all ROS parameters
     ros::init(argc, argv, "three_dimensional_node");
     ros::NodeHandle nh;
-    ros::NodeHandle ph("~");
+//    ros::NodeHandle ph("~");
 
-    Eigen::IOFormat one_line(Eigen::FullPrecision, 0, " ", " ");
+//    Eigen::IOFormat one_line(Eigen::FullPrecision, 0, " ", " ");
 
-    const size_t num_paths = ROSHelpers::GetParam(ph, "num_paths", 1);
-    const bool visualize = ROSHelpers::GetParam(ph, "visualize", true);
+//    const size_t num_paths = ROSHelpers::GetParam(ph, "num_paths", 1);
+//    const bool visualize = ROSHelpers::GetParam(ph, "visualize", true);
 
     const bool latch = false;
     const uint32_t queue_size = 1;

@@ -761,6 +761,7 @@ void ThreeDimensionalEnvironment::clearWhitelist()
 
 std::vector<ThreeDimensionalEnvironment::ConfigType> ThreeDimensionalEnvironment::waypointsToPath(const std::vector<ConfigType>& waypoints) const
 {
+    (void)waypoints;
     std::vector<ConfigType> path;
 
     assert(false && "waypointsToPath not implemented");
