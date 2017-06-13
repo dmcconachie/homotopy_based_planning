@@ -101,7 +101,7 @@ static void addRectangularSolidToCollisionMapGrid(sdf_tools::CollisionMapGrid& m
         }
     }
 }
-
+/*
 static void addRectangularLineStripToCollisionMapGrid(sdf_tools::CollisionMapGrid& map, const std::vector<Eigen::Vector3d>& line_strip, const double radius)
 {
     for (size_t ind = 0; ind + 1 < line_strip.size(); ++ind)
@@ -111,7 +111,7 @@ static void addRectangularLineStripToCollisionMapGrid(sdf_tools::CollisionMapGri
         addRectangularSolidToCollisionMapGrid(map, a, b);
     }
 }
-
+*/
 // Section 6.2.1
 ThreeDimensionalEnvironment ThreeDimensionalEnvironment::CreateBhattacharyaExampleFig17a()
 {

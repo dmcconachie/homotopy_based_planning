@@ -620,6 +620,7 @@ void PlanarRectangesCircles::clearWhitelist()
 std::vector<Eigen::Vector2d> PlanarRectangesCircles::waypointsToPath(const std::vector<Eigen::Vector2d>& waypoints) const
 {
     std::vector<Eigen::Vector2d> path;
+    (void)waypoints;
 
     assert(false && "waypointsToPath not implemented");
 
