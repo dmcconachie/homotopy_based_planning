@@ -126,7 +126,7 @@ ThreeDimensionalEnvironment ThreeDimensionalEnvironment::CreateBhattacharyaExamp
         env.marker_scale_ = 0.5;
         env.start_end_line_length_ = 1.0;
 
-        auto grid_offset = Eigen::Affine3d::Identity();
+        auto grid_offset = Eigen::Isometry3d::Identity();
         grid_offset(0, 3) = 0.5;
         grid_offset(1, 3) = 0.5;
 
@@ -204,7 +204,7 @@ ThreeDimensionalEnvironment ThreeDimensionalEnvironment::CreateBhattacharyaExamp
         env.marker_scale_ = 0.5;
         env.start_end_line_length_ = 1.0;
 
-        auto grid_offset = Eigen::Affine3d::Identity();
+        auto grid_offset = Eigen::Isometry3d::Identity();
         grid_offset(0, 3) = 0.5;
         grid_offset(1, 3) = 0.5;
 
@@ -306,7 +306,7 @@ ThreeDimensionalEnvironment ThreeDimensionalEnvironment::CreateBhattacharyaExamp
         env.marker_scale_ = 0.5;
         env.start_end_line_length_ = 1.0;
 
-        auto grid_offset = Eigen::Affine3d::Identity();
+        auto grid_offset = Eigen::Isometry3d::Identity();
         grid_offset(0, 3) = 0.5;
         grid_offset(1, 3) = 0.5;
 
@@ -413,7 +413,7 @@ ThreeDimensionalEnvironment ThreeDimensionalEnvironment::CreateBhattacharyaExamp
     {
         env.use_cached_h_vals_ = false;
 //        stopwatch(RESET);
-//        env.cached_h_values_ =  VoxelGrid::VoxelGrid<HValueToNeighbours>(Eigen::Affine3d::Identity(), env.collision_map_grid_.GetResolution(), env.collision_map_grid_.GetNumXCells(), env.collision_map_grid_.GetNumYCells(), env.collision_map_grid_.GetNumZCells(), HValueToNeighbours(Eigen::Vector3d(NAN, NAN, NAN)));
+//        env.cached_h_values_ =  VoxelGrid::VoxelGrid<HValueToNeighbours>(Eigen::Isometry3d::Identity(), env.collision_map_grid_.GetResolution(), env.collision_map_grid_.GetNumXCells(), env.collision_map_grid_.GetNumYCells(), env.collision_map_grid_.GetNumZCells(), HValueToNeighbours(Eigen::Vector3d(NAN, NAN, NAN)));
 //        for (double x = 0.0; x < env.collision_map_grid_.GetNumXCells(); x += 1.0)
 //        {
 //            for (double y = 0.0; y < env.collision_map_grid_.GetNumYCells(); y += 1.0)

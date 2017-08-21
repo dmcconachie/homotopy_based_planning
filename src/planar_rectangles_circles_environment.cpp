@@ -128,7 +128,7 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig12()
     env.marker_scale_ = 3.0;
     env.start_end_line_length_ = 10.0;
 
-    auto grid_offset = Eigen::Affine3d::Identity();
+    auto grid_offset = Eigen::Isometry3d::Identity();
     grid_offset(0, 3) = 0.5;
     grid_offset(1, 3) = 0.5;
 
@@ -196,7 +196,7 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig13()
     env.marker_scale_ = 1.0;
     env.start_end_line_length_ = 3.0;
 
-    auto grid_offset = Eigen::Affine3d::Identity();
+    auto grid_offset = Eigen::Isometry3d::Identity();
     grid_offset(0, 3) = 0.5;
     grid_offset(1, 3) = 0.5;
 
@@ -267,7 +267,7 @@ PlanarRectangesCircles PlanarRectangesCircles::CreateBhattacharyaExampleFig14()
         env.marker_scale_ = 1.0;
         env.start_end_line_length_ = 3.0;
 
-        auto grid_offset = Eigen::Affine3d::Identity();
+        auto grid_offset = Eigen::Isometry3d::Identity();
         grid_offset(0, 3) = 0.5;
         grid_offset(1, 3) = 0.5;
 
